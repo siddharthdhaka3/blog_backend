@@ -31,31 +31,7 @@ app.use(cors({credentials:true,origin:`${process.env.REQ_URL }`}));
 
 app.use(express.json());
 app.use(cookieParser());
-app.use((req, res, next) => {
-  res.cookie('cookieName', 'cookieValue', {
-    sameSite: 'none',
-    secure: true,
-  });
-  next();
-});
-//app.use('/uploads', express.static(__dirname + '/uploads'));
-const session = require('express-session');
 
-const sessionConfig = {
-  secret: 'MYSECRET',
-  name: 'appName',
-  resave: false,
-  saveUninitialized: false,
-  store: store,
-  cookie : {
-    sameSite: 'none', 
-  }
-};
-
-if (process.env.NODE_ENV === 'production') {
-  app.set('trust proxy', 1); // trust first proxy
-  sessionConfig.cookie.secure = true; // serve secure cookies
-}
 mongoose.connect(process.env.DATABASE);
 
 app.post('/register', async (req,res) => {
@@ -80,7 +56,7 @@ app.post('/login', async (req,res) => {
     // logged in
     jwt.sign({username,id:userDoc._id}, secret, {}, (err,token) => {
       if (err) throw err;
-      res.cookie('token', token).json({
+      res.cookie('token', token, { sameSite: 'none', secure: true}).json({
         id:userDoc._id,
         username,
       });
@@ -91,7 +67,7 @@ app.post('/login', async (req,res) => {
 });
 
 app.get('/profile', (req,res) => {
-  const {token} = req.cookies;
+  const {token} = req.cookies
   jwt.verify(token, secret, {}, (err,info) => {
     if (err) throw err;
     res.json(info);
