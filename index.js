@@ -31,6 +31,13 @@ app.use(cors({credentials:true,origin:`${process.env.REQ_URL }`}));
 
 app.use(express.json());
 app.use(cookieParser());
+app.use((req, res, next) => {
+  res.cookie('cookieName', 'cookieValue', {
+    sameSite: 'none',
+    secure: true,
+  });
+  next();
+});
 //app.use('/uploads', express.static(__dirname + '/uploads'));
 
 mongoose.connect(process.env.DATABASE);
