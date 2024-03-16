@@ -39,7 +39,23 @@ app.use((req, res, next) => {
   next();
 });
 //app.use('/uploads', express.static(__dirname + '/uploads'));
+const session = require('express-session');
 
+const sessionConfig = {
+  secret: 'MYSECRET',
+  name: 'appName',
+  resave: false,
+  saveUninitialized: false,
+  store: store,
+  cookie : {
+    sameSite: 'none', 
+  }
+};
+
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1); // trust first proxy
+  sessionConfig.cookie.secure = true; // serve secure cookies
+}
 mongoose.connect(process.env.DATABASE);
 
 app.post('/register', async (req,res) => {
@@ -74,29 +90,14 @@ app.post('/login', async (req,res) => {
   }
 });
 
-// app.get('/profile', (req,res) => {
-//   const {token} = req.cookies;
-//   jwt.verify(token, secret, {}, (err,info) => {
-//     if (err) throw err;
-//     res.json(info);
-//   });
-// });
-app.get('/profile', (req, res) => {
-  const { token } = req.cookies;
-  jwt.verify(token, secret, {}, (err, info) => {
+app.get('/profile', (req,res) => {
+  const {token} = req.cookies;
+  jwt.verify(token, secret, {}, (err,info) => {
     if (err) throw err;
-
-    // Set cookie options
-    const cookieOptions = {
-      sameSite: 'None', // Allow cross-site usage
-      secure: true,     // Requires HTTPS connection
-      httpOnly: true    // Prevents client-side access to the cookie
-    };
-
-    // Send the response with the cookie set
-    res.cookie('token', token, cookieOptions).json(info);
+    res.json(info);
   });
 });
+
 
 app.post('/logout', (req,res) => {
   res.cookie('token', '').json('ok');
