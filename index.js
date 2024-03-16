@@ -74,11 +74,27 @@ app.post('/login', async (req,res) => {
   }
 });
 
-app.get('/profile', (req,res) => {
-  const {token} = req.cookies;
-  jwt.verify(token, secret, {}, (err,info) => {
+// app.get('/profile', (req,res) => {
+//   const {token} = req.cookies;
+//   jwt.verify(token, secret, {}, (err,info) => {
+//     if (err) throw err;
+//     res.json(info);
+//   });
+// });
+app.get('/profile', (req, res) => {
+  const { token } = req.cookies;
+  jwt.verify(token, secret, {}, (err, info) => {
     if (err) throw err;
-    res.json(info);
+
+    // Set cookie options
+    const cookieOptions = {
+      sameSite: 'None', // Allow cross-site usage
+      secure: true,     // Requires HTTPS connection
+      httpOnly: true    // Prevents client-side access to the cookie
+    };
+
+    // Send the response with the cookie set
+    res.cookie('token', token, cookieOptions).json(info);
   });
 });
 
